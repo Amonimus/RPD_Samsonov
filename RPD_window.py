@@ -2,8 +2,8 @@ from tkinter import *
 from tkinter import filedialog
 import os
 import RPD_ftp
-import RPD_neuroling
 import RPD_docprocessor
+import RPD_neuroling
 
 class wnd:
     def __init__(self):
@@ -119,7 +119,7 @@ class wnd:
         table = RPD_neuroling.import_table()
         self.debug("Анализ...")
         
-        # df = RPD_neuroling.group_table(table)
+        # table = RPD_neuroling.group_table(table)
         RPD_neuroling.table_heatmap(table)
         # RPD_neuroling.showtable(table)
         self.debug("Готово.")

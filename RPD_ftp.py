@@ -1,5 +1,4 @@
-import os, tempfile
-import ftputil
+import os, ftputil
 
 def loadftp(server, username, password, target_folder):
     # Создать папку если нет

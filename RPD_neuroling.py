@@ -1,12 +1,8 @@
-import os, re, pprint, csv, sys
-from tabulate import tabulate
+import os, re, csv
 import pandas as pd
 from pandasgui import show as pdshow
 import pymorphy3
 from nltk.corpus import stopwords
-import numpy as np
-import seaborn as sns
-import plotly
 import matplotlib.pyplot as plt
 
 # Токенизация по словам
