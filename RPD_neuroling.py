@@ -60,48 +60,55 @@ def dictionary_generator(global_bag_table, topics_wordbags, doc_param):
         global_bag_table[topic_name] = topics_wordbags[topic_id]
     return global_bag_table
 
+# Редактор фреймов
 def showtable(table):
-    # Редактор фреймов
     pdshow(table)
 
+# Dictionary 2 Pandas
 def convert_dict_dataframe(table):
-    df = pd.DataFrame.from_dict(table, orient='columns').fillna(0).astype(int)
+    table = pd.DataFrame.from_dict(table, orient='columns').fillna(0).astype(int)
     # Сортировка по токенам
-    df = df.sort_index(axis=1)
+    table = table.sort_index(axis=1)
     # Сортировка по темам
-    df = df.sort_index(axis=0)
-    return df
+    table = table.sort_index(axis=0)
+    return table
 
-def csv_export(table):
-    # Экспорт
-    table.to_csv("dict.csv")
+# Экспорт
+def csv_export(table, dic_path):
+    table.to_csv(dic_path)
 
-def import_table():
-    # Импорт
-    df = pd.read_csv('dict.csv', index_col=[0])
+# Импорт
+def import_table(dic_path):
+    table = pd.read_csv(dic_path, index_col=[0])
     
     #Перемещение общего ряда вперед
-    df.insert(0, 'dictionary', df.pop('dictionary'))
-    df = df.sort_values(by=['dictionary'], ascending=False)
-    
+    table.insert(0, 'dictionary', table.pop('dictionary'))
+    table = table.sort_values(by=['dictionary'], ascending=False)
+    return table
+
+# Фильтры
+def compress_table(table):
     #Убрать стоп-слова (союзы и падежи)
     st_words = stopwords.words('russian')
-    df = df.drop(st_words, axis=0, errors="ignore")
+    table = table.drop(st_words, axis=0, errors="ignore")
     
     #Убрать N% слов из начала и слова реже чем N с конца
     cutoff_perc = 3
-    cut = len(df.index) // int(100/cutoff_perc)
-    df = df.iloc[cut: , :]
-    df = df[df['dictionary'] >= df['dictionary'][-cut]]
-    return df
+    cut = len(table.index) // int(100/cutoff_perc)
+    table = table.iloc[cut: , :]
+    table = table[table['dictionary'] >= table['dictionary'][-cut]]
+    return table
     
+# Просуммировать и сжать лекции одного документа
 def group_table(table):
     groups = [col.split("_ЛК")[0] for col in table.head()]
     table.columns = table.columns[:0].tolist() + groups
     table = table.groupby(table.columns, axis=1).sum()
     return table
-    
-def table_heatmap(table):
+
+# График матрицы коррелиации
+def table_heatmap(table, filt_exp):
+    table = table.filter(like=filt_exp, axis=1)
     table = table.corr(method ='pearson').fillna(0)
     fig = plt.figure("Correlation Matrix", figsize=(20, 10))
     plt.matshow(table, fignum=fig.number)
@@ -112,5 +119,5 @@ def table_heatmap(table):
     plt.xticks(values, labels, fontsize=6, rotation=45)
     cb = plt.colorbar()
     cb.ax.tick_params(labelsize=16)
-    plt.show()
+    plt.show(block=False)
     
