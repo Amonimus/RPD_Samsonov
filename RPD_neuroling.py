@@ -116,7 +116,7 @@ def table_heatmap(table, filt_exp):
     values = range(table.select_dtypes(['number']).shape[1])
     labels = table.select_dtypes(['number']).columns
     plt.yticks(values, labels, fontsize=8)
-    plt.xticks(values, labels, fontsize=6, rotation=45)
+    plt.xticks(values, labels, fontsize=6, rotation=90)
     cb = plt.colorbar()
     cb.ax.tick_params(labelsize=16)
     plt.show(block=False)

@@ -172,7 +172,6 @@ class wnd:
             dic_path = self.lbl_dict_name["text"]
             
         filter = self.filter_value.get()
-        print(filter)
         if filter == "":
             filter = " "
             
