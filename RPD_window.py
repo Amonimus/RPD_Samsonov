@@ -29,14 +29,14 @@ class wnd:
             borderwidth=1,
             relief="solid")
         self.group_check_value = BooleanVar(False)
-        # Расположение и конфигурация
+        
         self.setup()    
         
     def setup(self):
+        # Расположение и конфигурация
         self.tkroot.title('RPD')
         
         self.debug_lbl.grid(row=0, column=0, columnspan=5)
-        self.debug("РПД Обработчик")
         
         lbl_serv = Label(text="Сервер", width=8)
         lbl_serv.grid(row=1, column=0)
@@ -68,12 +68,12 @@ class wnd:
         lbl_filter.grid(row=3, column=2)
         self.filter_value.grid(row=3, column=3)
         
-        group_check = Checkbutton(
+        group_check_mark = Checkbutton(
             text='Группировать', 
             variable=self.group_check_value, 
             onvalue=True, 
             offvalue=False)
-        group_check.grid(row=4, column=3)
+        group_check_mark.grid(row=4, column=3)
         
         btn_dwnld = Button(
             text="Скачать РПД в папку", 
@@ -92,61 +92,59 @@ class wnd:
             width=20, 
             command=self.analyze)
         btn_anz.grid(row=3, column=4)
+        
+        self.debug("РПД Обработчик")
     
-    def debug(self, text):
+    def debug(self, dbg_str):
         # Показать в окне заданный текст
-        self.debug_lbl.config(text = text)
+        self.debug_lbl.config(text = dbg_str)
         self.tkroot.update()
     
     def get_folder(self):
         # Форма выбора папки
         selected_folder = filedialog.askdirectory()
         self.lbl_dwnld_name.config(text = selected_folder)
-        
+    
+    def check_default(self):
+        # Значения по умолчанию
+        if self.form_serv.get() == "":
+            self.form_serv.insert(0, '127.0.0.1')
+        if self.form_login.get() = "":
+            self.form_login.insert(0, 'username')
+        if self.form_pass.get() == "":
+            self.form_pass.insert(0, '')
+        if self.lbl_dwnld_name["text"] == "":
+            self.lbl_dwnld_name.config(text = os.getcwd()+'\\'+"RPD_Chunk")
+        if self.lbl_dict_name["text"] == "":
+            self.lbl_dict_name.config(text = 'dict.csv')
+        if self.filter_value.get() == "":
+            self.form_pass.insert(0, ' ')
+
     def ftp_download(self):
-        #Получить переменные
+        # Получить переменные
+        check_default()
         ftp_server = self.form_serv.get()
         ftp_login = self.form_login.get()
         ftp_pass = self.form_pass.get()
-        ftp_folder = self.lbl_dwnld_name["text"]
-        
-        # Значения по умолчанию
-        if ftp_server == "":
-            self.form_serv.insert(0, '127.0.0.1')
-            ftp_server = self.form_serv.get()
-        if ftp_login == "":
-            self.form_login.insert(0, 'username')
-            ftp_login = self.form_login.get()
-        if ftp_folder == "":
-            self.lbl_dwnld_name.config(text = os.getcwd()+"\\"+'RPD_Chunk')
-            ftp_folder = self.lbl_dwnld_name["text"]
-        
+        ftp_folder = self.lbl_dwnld_name['text']
+                
         # Загрузка с сервера
         self.debug("Загрузка...")
-        if ftp_server != "" and ftp_login != "" and ftp_folder != "":
-            download_confirm = RPD_ftp.loadftp(ftp_server, ftp_login, ftp_pass, ftp_folder)
-            if not download_confirm:
-                self.debug("Нет FTP Соединения.")
-            else:
-                self.debug("Загружен в "+ftp_folder)
+        download_confirm = RPD_ftp.loadftp(ftp_server, ftp_login, ftp_pass, ftp_folder)
+        if not download_confirm:
+            self.debug("Нет FTP Соединения.")
         else:
-            self.debug("Не все параметры.")
+            self.debug("Загружен в "+ftp_folder)
     
     def dictionary_gen(self):
-        # Значения по умолчанию
-        path = self.lbl_dwnld_name["text"]
-        if path == "":
-            self.lbl_dwnld_name.config(text = os.getcwd()+"\\"+'RPD_Chunk')
-            path = self.lbl_dwnld_name["text"]
-            
-        dic_path = self.lbl_dict_name["text"]
-        if dic_path == "":
-            self.lbl_dict_name.config(text = 'dict.csv')
-            dic_path = self.lbl_dict_name["text"]
+        # Получить переменные
+        check_default()
+        work_path = self.lbl_dwnld_name['text']            
+        dic_path = self.lbl_dict_name['text']
         
-        # Главная процедура
-        global_bag_table = {"dictionary": {}}
+        # Генерация
         self.debug("Обработка...")
+        global_bag_table = {"dictionary": {}}
         for doc_name in os.listdir(path):
             doc = RPD_docprocessor.docload(path, doc_name)
             if doc:
@@ -160,21 +158,19 @@ class wnd:
                 topics_wordbags = RPD_neuroling.word_bag(topics_tokens_list)
                 global_bag_table = RPD_neuroling.dictionary_generator(global_bag_table, topics_wordbags, doc_param)
         self.debug("Генерация словаря завершена.")
+        
+        # Экспорт
         dictionary_dataframe = RPD_neuroling.convert_dict_dataframe(global_bag_table)
         RPD_neuroling.csv_export(dictionary_dataframe, dic_path)
         self.debug("Словарь экспортирован.")
         
     def analyze(self):
-        # Значения по умолчанию
+        # Получить переменные
+        check_default()
         dic_path = self.lbl_dict_name["text"]
-        if dic_path == "":
-            self.lbl_dict_name.config(text = 'dict.csv')
-            dic_path = self.lbl_dict_name["text"]
-            
         filter = self.filter_value.get()
-        if filter == "":
-            filter = " "
-            
+        
+        # Работа со словарём
         self.debug("Импорт...")
         table = RPD_neuroling.import_table(dic_path)
         self.debug("Анализ...")
