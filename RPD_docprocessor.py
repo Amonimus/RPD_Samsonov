@@ -2,7 +2,7 @@ import re
 from docx import Document
 
 # Импорт файла
-def docload(path,file):
+def docload(path, file):
     # Если расширение файла не .docx, пропустить
     if re.compile('.*.docx$').match(file) != None:
         return Document(path+"\\"+file)

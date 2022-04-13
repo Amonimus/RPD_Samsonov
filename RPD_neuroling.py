@@ -1,6 +1,7 @@
 import os, re, csv
 import pandas as pd
-from pandasgui import show as pdshow
+#from pandasgui import show as pdshow
+#from IPython.display import display as pdisplay
 import pymorphy3
 from nltk.corpus import stopwords
 import matplotlib.pyplot as plt
@@ -12,6 +13,7 @@ def tokenize_topics(topic_list):
         # Убрать слово в скобках
         topic = topic.replace(" (Лек)", "")
         # Убрать пунктуацию
+        # надо включать английские слова
         # regex = re.compile(r'[А-ЯЁа-яё]+')
         # С английскими словами таблица выходит пустой
         regex = re.compile(r'\w+', re.UNICODE)
@@ -20,9 +22,10 @@ def tokenize_topics(topic_list):
         topics_tokens_list.append(topic_tokens)
     return topics_tokens_list
 
-# Лемматизация (стемминг?)
+# Лемматизация
 def lemma_token(topic_tokens_list):
     morphanalyzer = pymorphy3.MorphAnalyzer()
+    # определить язык слова
     lemmas_list = []
     # Для каждой темы для кажого токена
     for topic_tokens in topic_tokens_list: 
@@ -62,7 +65,10 @@ def dictionary_generator(global_bag_table, topics_wordbags, doc_param):
 
 # Редактор фреймов
 def showtable(table):
-    pdshow(table)
+    #pdshow(table)
+    #pdisplay(table)
+    #table.style
+    pass
 
 # Dictionary 2 Pandas
 def convert_dict_dataframe(table):
@@ -104,19 +110,26 @@ def group_table(table):
     groups = [col.split("_ЛК")[0] for col in table.head()]
     table.columns = table.columns[:0].tolist() + groups
     table = table.groupby(table.columns, axis=1).sum()
+    
+    groups = [col.rsplit("_")[-1] for col in table.head()]
+    table.columns = table.columns[:0].tolist() + groups
+    table = table.groupby(table.columns, axis=1).max()
+    
     return table
 
 # График матрицы коррелиации
 def table_heatmap(table, filt_exp):
-    table = table.filter(like=filt_exp, axis=1)
+    if filt_exp != "":
+        table = table.filter(like=filt_exp, axis=1)
     table = table.corr(method ='pearson').fillna(0)
+    table = table[table < 0.9]
+    
     fig = plt.figure("Correlation Matrix", figsize=(20, 10))
     plt.matshow(table, fignum=fig.number)
-    
     values = range(table.select_dtypes(['number']).shape[1])
     labels = table.select_dtypes(['number']).columns
     plt.yticks(values, labels, fontsize=8)
-    plt.xticks(values, labels, fontsize=6, rotation=90)
+    plt.xticks(values, labels, fontsize=8, rotation=90, wrap=True)
     cb = plt.colorbar()
     cb.ax.tick_params(labelsize=16)
     plt.show(block=False)

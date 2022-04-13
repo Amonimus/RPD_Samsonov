@@ -28,7 +28,8 @@ class wnd:
             justify="left",
             borderwidth=1,
             relief="solid")
-        self.group_check_value = BooleanVar(False)
+        self.group_check_value = BooleanVar(self.tkroot, True)
+        self.dict_method = StringVar()
         
         self.setup()    
         
@@ -93,6 +94,13 @@ class wnd:
             command=self.analyze)
         btn_anz.grid(row=3, column=4)
         
+        lbl_serv = Label(text="Метод словаря", width=8)
+        lbl_serv.grid(row=1, column=5)
+        var_list = ["BOW", "PMI", "TF-IDF"]
+        dict_method_dropdown = OptionMenu(self.tkroot, self.dict_method, *var_list)
+        self.dict_method.set(var_list[0])
+        dict_method_dropdown.grid(row=1, column=6)
+        
         self.debug("РПД Обработчик")
     
     def debug(self, dbg_str):
@@ -109,7 +117,7 @@ class wnd:
         # Значения по умолчанию
         if self.form_serv.get() == "":
             self.form_serv.insert(0, '127.0.0.1')
-        if self.form_login.get() = "":
+        if self.form_login.get() == "":
             self.form_login.insert(0, 'username')
         if self.form_pass.get() == "":
             self.form_pass.insert(0, '')
@@ -118,11 +126,11 @@ class wnd:
         if self.lbl_dict_name["text"] == "":
             self.lbl_dict_name.config(text = 'dict.csv')
         if self.filter_value.get() == "":
-            self.form_pass.insert(0, ' ')
+            self.filter_value.insert(0, "")
 
     def ftp_download(self):
         # Получить переменные
-        check_default()
+        self.check_default()
         ftp_server = self.form_serv.get()
         ftp_login = self.form_login.get()
         ftp_pass = self.form_pass.get()
@@ -138,13 +146,14 @@ class wnd:
     
     def dictionary_gen(self):
         # Получить переменные
-        check_default()
+        self.check_default()
         work_path = self.lbl_dwnld_name['text']            
         dic_path = self.lbl_dict_name['text']
+        dic_method = dict_method.get()
         
         # Генерация
         self.debug("Обработка...")
-        global_bag_table = {"dictionary": {}}
+        global_dictionary = {"dictionary": {}}
         for doc_name in os.listdir(path):
             doc = RPD_docprocessor.docload(path, doc_name)
             if doc:
@@ -156,28 +165,30 @@ class wnd:
                 topics_tokens_list = RPD_neuroling.tokenize_topics(topics_list)
                 topics_tokens_list = RPD_neuroling.lemma_token(topics_tokens_list)
                 topics_wordbags = RPD_neuroling.word_bag(topics_tokens_list)
-                global_bag_table = RPD_neuroling.dictionary_generator(global_bag_table, topics_wordbags, doc_param)
+                global_dictionary = RPD_neuroling.dictionary_generator(global_dictionary, topics_wordbags, doc_param)
         self.debug("Генерация словаря завершена.")
         
         # Экспорт
-        dictionary_dataframe = RPD_neuroling.convert_dict_dataframe(global_bag_table)
+        dictionary_dataframe = RPD_neuroling.convert_dict_dataframe(global_dictionary)
         RPD_neuroling.csv_export(dictionary_dataframe, dic_path)
         self.debug("Словарь экспортирован.")
         
     def analyze(self):
         # Получить переменные
-        check_default()
+        self.check_default()
         dic_path = self.lbl_dict_name["text"]
         filter = self.filter_value.get()
         
         # Работа со словарём
         self.debug("Импорт...")
         table = RPD_neuroling.import_table(dic_path)
+        
         self.debug("Анализ...")
         table = RPD_neuroling.compress_table(table)
         if self.group_check_value.get():
             table = RPD_neuroling.group_table(table)
-        # RPD_neuroling.showtable(table)
+        self.debug("Вывод...")
+        #RPD_neuroling.showtable(table)
         RPD_neuroling.table_heatmap(table, filter)
         self.debug("Готово.")
         
