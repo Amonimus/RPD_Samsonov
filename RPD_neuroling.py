@@ -1,6 +1,6 @@
 import os, re, csv
 import pandas as pd
-#from pandasgui import show as pdshow
+from pandasgui import show as pdshow
 #from IPython.display import display as pdisplay
 import pymorphy3
 from nltk.corpus import stopwords
@@ -50,7 +50,7 @@ def word_bag(topic_tokens_list):
     return topics_bags
 
 # Создание словаря
-def dictionary_generator(global_bag_table, topics_wordbags, doc_param):
+def dictionary_generator(global_bag_table, topics_wordbags, doc_param, method):
     for topic_id in range(len(topics_wordbags)):
         for token, val in topics_wordbags[topic_id].items():
             # Проссуммировать для общего
@@ -61,11 +61,29 @@ def dictionary_generator(global_bag_table, topics_wordbags, doc_param):
         # Создать метки по лекциям
         topic_name = doc_param["code"]+"_"+doc_param["dept"]+"_"+doc_param["subject"]+"_ЛК_"+str(topic_id)
         global_bag_table[topic_name] = topics_wordbags[topic_id]
+    
     return global_bag_table
+
+def tfidf_generator(table):
+    tf = table.copy()
+    for doc, wordbag in table.items():
+        for word, wordcount in wordbag.items():
+            tf[doc][word] = wordcount / len(wordbag)
+    showtable(table)
+    idf = len(table)-1
+    print(idf)
+    input("PAUSE")
+
+# elif mode == 'pmi':
+      # sum_of_sizes_of_docs = np.array(result.sum())
+      # sizes_of_every_doc = np.array(result.sum(1))
+      # count_word_in_docs = np.array(result.sum(0))
+      # result = result.multiply((sum_of_sizes_of_docs**2)/((sizes_of_every_doc**2) * count_word_in_docs))
+      # result.data = np.log(result.data)
 
 # Редактор фреймов
 def showtable(table):
-    #pdshow(table)
+    pdshow(table)
     #pdisplay(table)
     #table.style
     pass
@@ -121,15 +139,17 @@ def group_table(table):
 def table_heatmap(table, filt_exp):
     if filt_exp != "":
         table = table.filter(like=filt_exp, axis=1)
+    #print(table)
     table = table.corr(method ='pearson').fillna(0)
     table = table[table < 0.9]
+    table = table.iloc[1: , 1:]
     
     fig = plt.figure("Correlation Matrix", figsize=(20, 10))
     plt.matshow(table, fignum=fig.number)
     values = range(table.select_dtypes(['number']).shape[1])
     labels = table.select_dtypes(['number']).columns
     plt.yticks(values, labels, fontsize=8)
-    plt.xticks(values, labels, fontsize=8, rotation=90, wrap=True)
+    plt.xticks(values, labels, fontsize=8, rotation=90, ha="left", rotation_mode="anchor", wrap=False)
     cb = plt.colorbar()
     cb.ax.tick_params(labelsize=16)
     plt.show(block=False)

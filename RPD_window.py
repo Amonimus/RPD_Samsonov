@@ -12,9 +12,9 @@ class wnd:
         
         # Элементы, которые работают как переменные
         self.debug_lbl = Label(justify="left")
-        self.form_serv = Entry(width=20)
-        self.form_login = Entry(width=20)
-        self.form_pass = Entry(width=20)
+        self.form_serv = Entry(width=10)
+        self.form_login = Entry(width=10)
+        self.form_pass = Entry(width=10)
         self.filter_value = Entry(width=20)
         self.lbl_dwnld_name = Label(
             wraplength=120,
@@ -94,12 +94,12 @@ class wnd:
             command=self.analyze)
         btn_anz.grid(row=3, column=4)
         
-        lbl_serv = Label(text="Метод словаря", width=8)
-        lbl_serv.grid(row=1, column=5)
-        var_list = ["BOW", "PMI", "TF-IDF"]
+        lbl_serv = Label(text="Метод словаря", width=12)
+        lbl_serv.grid(row=4, column=1)
+        var_list = ["BOW", "TF-IDF", "PMI"]
         dict_method_dropdown = OptionMenu(self.tkroot, self.dict_method, *var_list)
         self.dict_method.set(var_list[0])
-        dict_method_dropdown.grid(row=1, column=6)
+        dict_method_dropdown.grid(row=4, column=2)
         
         self.debug("РПД Обработчик")
     
@@ -149,28 +149,33 @@ class wnd:
         self.check_default()
         work_path = self.lbl_dwnld_name['text']            
         dic_path = self.lbl_dict_name['text']
-        dic_method = dict_method.get()
+        dic_method = self.dict_method.get()
         
-        # Генерация
+        # Генерация словаря
         self.debug("Обработка...")
-        global_dictionary = {"dictionary": {}}
-        for doc_name in os.listdir(path):
-            doc = RPD_docprocessor.docload(path, doc_name)
+        rpd_bigdata = {} # speciality - department - discipline - lecture - topic
+        
+        # global_dictionary = {"dictionary": {}}
+        for doc_name in os.listdir(work_path):
+            doc = RPD_docprocessor.docload(work_path, doc_name)
             if doc:
-                doc_param = RPD_docprocessor.group_doc_name(doc_name)
-                self.debug(">> " + doc_param["year"] +" "+ doc_param["dept"] +" "+ doc_param["code"] +" "+ doc_param["subject"])
+                rpd_bigdata = RPD_docprocessor.parse_doc_topics(doc, rpd_bigdata)
+        print(rpd_bigdata)
+        input("PAUSE")
+                # doc_param = RPD_docprocessor.group_doc_name(doc_name)
+                # self.debug(">> " + doc_param["year"] +" "+ doc_param["dept"] +" "+ doc_param["code"] +" "+ doc_param["subject"])
                 
-                topics_list = RPD_docprocessor.parse_doc_topics(doc)
-                topics_list = RPD_docprocessor.clean_topics(topics_list)
-                topics_tokens_list = RPD_neuroling.tokenize_topics(topics_list)
-                topics_tokens_list = RPD_neuroling.lemma_token(topics_tokens_list)
-                topics_wordbags = RPD_neuroling.word_bag(topics_tokens_list)
-                global_dictionary = RPD_neuroling.dictionary_generator(global_dictionary, topics_wordbags, doc_param)
+                # topics_list = RPD_docprocessor.parse_doc_topics(doc)
+                # topics_list = RPD_docprocessor.clean_topics(topics_list)
+                # topics_tokens_list = RPD_neuroling.tokenize_topics(topics_list)
+                # topics_tokens_list = RPD_neuroling.lemma_token(topics_tokens_list)
+                # topics_wordbags = RPD_neuroling.word_bag(topics_tokens_list)
+                # global_dictionary = RPD_neuroling.dictionary_generator(global_dictionary, topics_wordbags, doc_param, dic_method)
         self.debug("Генерация словаря завершена.")
+        # dictionary_dataframe = RPD_neuroling.convert_dict_dataframe(global_dictionary)
         
         # Экспорт
-        dictionary_dataframe = RPD_neuroling.convert_dict_dataframe(global_dictionary)
-        RPD_neuroling.csv_export(dictionary_dataframe, dic_path)
+        # RPD_neuroling.csv_export(dictionary_dataframe, dic_path)
         self.debug("Словарь экспортирован.")
         
     def analyze(self):
@@ -182,6 +187,8 @@ class wnd:
         # Работа со словарём
         self.debug("Импорт...")
         table = RPD_neuroling.import_table(dic_path)
+        
+        #RPD_neuroling.tfidf_generator(table)
         
         self.debug("Анализ...")
         table = RPD_neuroling.compress_table(table)
