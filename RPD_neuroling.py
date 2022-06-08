@@ -129,9 +129,9 @@ def group_table(table):
     table.columns = table.columns[:0].tolist() + groups
     table = table.groupby(table.columns, axis=1).sum()
     
-    groups = [col.rsplit("_")[-1] for col in table.head()]
-    table.columns = table.columns[:0].tolist() + groups
-    table = table.groupby(table.columns, axis=1).max()
+    # groups = [col.rsplit("_")[-1] for col in table.head()]
+    # table.columns = table.columns[:0].tolist() + groups
+    # table = table.groupby(table.columns, axis=1).max()
     
     return table
 
@@ -148,7 +148,7 @@ def table_heatmap(table, filt_exp):
     plt.matshow(table, fignum=fig.number)
     values = range(table.select_dtypes(['number']).shape[1])
     labels = table.select_dtypes(['number']).columns
-    plt.yticks(values, labels, fontsize=8)
+    plt.yticks(values, labels, fontsize=12)
     plt.xticks(values, labels, fontsize=8, rotation=90, ha="left", rotation_mode="anchor", wrap=False)
     cb = plt.colorbar()
     cb.ax.tick_params(labelsize=16)

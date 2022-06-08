@@ -157,13 +157,13 @@ class wnd:
         
         # global_dictionary = {"dictionary": {}}
         for doc_name in os.listdir(work_path):
+            doc_param = RPD_docprocessor.group_doc_name(doc_name)
+            self.debug(">> " + doc_param["year"] +" "+ doc_param["dept"] +" "+ doc_param["code"] +" "+ doc_param["subject"])
             doc = RPD_docprocessor.docload(work_path, doc_name)
             if doc:
                 rpd_bigdata = RPD_docprocessor.parse_doc_topics(doc, rpd_bigdata)
         print(rpd_bigdata)
         input("PAUSE")
-                # doc_param = RPD_docprocessor.group_doc_name(doc_name)
-                # self.debug(">> " + doc_param["year"] +" "+ doc_param["dept"] +" "+ doc_param["code"] +" "+ doc_param["subject"])
                 
                 # topics_list = RPD_docprocessor.parse_doc_topics(doc)
                 # topics_list = RPD_docprocessor.clean_topics(topics_list)
