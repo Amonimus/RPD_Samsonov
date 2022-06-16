@@ -18,4 +18,4 @@ def loadftp(server, username, password, target_folder):
         return True
     # Если сервер по адресу закрыт или не найден
     except ftputil.error.FTPOSError:
-       return False
+        return False

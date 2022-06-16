@@ -155,27 +155,29 @@ class wnd:
         self.debug("Обработка...")
         rpd_bigdata = {} # speciality - department - discipline - lecture - topic
         
-        # global_dictionary = {"dictionary": {}}
+        global_dictionary = {"dictionary": {}}
         for doc_name in os.listdir(work_path):
             doc_param = RPD_docprocessor.group_doc_name(doc_name)
             self.debug(">> " + doc_param["year"] +" "+ doc_param["dept"] +" "+ doc_param["code"] +" "+ doc_param["subject"])
             doc = RPD_docprocessor.docload(work_path, doc_name)
             if doc:
-                rpd_bigdata = RPD_docprocessor.parse_doc_topics(doc, rpd_bigdata)
-        print(rpd_bigdata)
-        input("PAUSE")
+                # topics_list = RPD_docprocessor.parse_doc_topics(doc, rpd_bigdata)
+                topics_list = RPD_docprocessor.parse_doc_topics(doc)
+                topics_list = RPD_docprocessor.clean_topics(topics_list)
+                # print(topics_list)
+                # input("PAUSE")
+                topics_tokens_list = RPD_neuroling.tokenize_topics(topics_list)
+                topics_tokens_list = RPD_neuroling.lemma_token(topics_tokens_list)
+                topics_wordbags = RPD_neuroling.word_bag(topics_tokens_list)
+                global_dictionary = RPD_neuroling.dictionary_generator(global_dictionary, topics_wordbags, doc_param, dic_method)
+        #print(rpd_bigdata)
+        #input("PAUSE")
                 
-                # topics_list = RPD_docprocessor.parse_doc_topics(doc)
-                # topics_list = RPD_docprocessor.clean_topics(topics_list)
-                # topics_tokens_list = RPD_neuroling.tokenize_topics(topics_list)
-                # topics_tokens_list = RPD_neuroling.lemma_token(topics_tokens_list)
-                # topics_wordbags = RPD_neuroling.word_bag(topics_tokens_list)
-                # global_dictionary = RPD_neuroling.dictionary_generator(global_dictionary, topics_wordbags, doc_param, dic_method)
         self.debug("Генерация словаря завершена.")
-        # dictionary_dataframe = RPD_neuroling.convert_dict_dataframe(global_dictionary)
+        dictionary_dataframe = RPD_neuroling.convert_dict_dataframe(global_dictionary)
         
         # Экспорт
-        # RPD_neuroling.csv_export(dictionary_dataframe, dic_path)
+        RPD_neuroling.csv_export(dictionary_dataframe, dic_path)
         self.debug("Словарь экспортирован.")
         
     def analyze(self):
